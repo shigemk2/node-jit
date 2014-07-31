@@ -1,0 +1,15 @@
+{
+  "name": "node-jit",
+  "version": "0.0.0",
+  "description": "",
+  "main": "jit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "shigemk2",
+  "license": "MIT",
+  "devDependencies": {
+    "ffi": "^1.2.7",
+    "ref": "^0.3.2"
+  }
+}
