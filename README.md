@@ -15,4 +15,8 @@ i386アセンブリのJITコンパイラ
 $ npm install
 ```
 
+### PythonでJIT from https://gist.github.com/7shi/2533658#file-mac64-py
 
+```sh
+$ python mac64.py
+```
