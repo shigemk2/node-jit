@@ -20,3 +20,9 @@ $ npm install
 ```sh
 $ python mac64.py
 ```
+
+### BF->Python アセンブリトランスレータ from https://github.com/mason-/cmpimpl/blob/master/python2/bf2asm.py
+
+```sh
+$ python bf2asm.py
+```
