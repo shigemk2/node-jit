@@ -1,22 +1,22 @@
 ref = require("ref");
 ffi = require("ffi");
 
-mmap = ffi.ForeignFunction(
-  ffi.DynamicLibrary("libc.dylib").get("mmap"),
-  "int", ["int", "int"]);
+mmap = ffi.ForeignFunction(ffi.DynamicLibrary("libc.dylib").get("mmap"), "pointer", ["pointer", "size_t", "int", "int", "int", "off_t"]);
+function VirtualAlloc(address, size, protect, flag, fd, offset) {
+    return mmap(address, size, protect, flag, fd, offset).reinterpret(size);
+}
 munmap = ffi.ForeignFunction(
   ffi.DynamicLibrary("libc.dylib").get("munmap"),
-  "int", ["int", "int"]);
+  "pointer", ["pointer", "size_t"]);
 memmove = ffi.ForeignFunction(
   ffi.DynamicLibrary("libc.dylib").get("memmove"),
   "int", ["int", "int"]);
 
-PROT_READ   = 1;
-PROT_WRITE  = 2;
-PROT_EXEC   = 4;
-MAP_PRIVATE = 2;
-MAP_ANON    = 0x1000;
+MEM_COMMIT  = 0x1000
+MEM_RELEASE = 0x8000
+PAGE_EXECUTE_READWRITE = 0x40
 
+buf = VirtualAlloc(ref.NULL, 16, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
 codes = [
     0x48, 0x89, 0xf8, // mov rax, rdi
     0x48, 0x01, 0xf0, // add rax, rsi
