@@ -1,32 +1,45 @@
-ref = require("ref");
-ffi = require("ffi");
-
-mmap = ffi.ForeignFunction(ffi.DynamicLibrary("libc.dylib").get("mmap"), "pointer", ["pointer", "size_t", "int", "int", "int", "off_t"]);
-function VirtualAlloc(address, size, protect, flag, fd, offset) {
-    return mmap(address, size, protect, flag, fd, offset).reinterpret(size);
+var ref = require("ref");
+var ffi = require("ffi");
+ 
+var libc = ffi.Library("libc", {
+    "mmap": ["pointer", ["pointer", "size_t", "int", "int", "int", "int64"]],
+    "munmap": ["int", ["pointer", "size_t"]],
+});
+ 
+var PROT_READ = 1;
+var PROT_WRITE = 2;
+var PROT_EXEC = 4;
+var MAP_PRIVATE = 2;
+var MAP_ANON = 0x1000;
+ 
+function jitalloc(size) {
+    var p = libc.mmap(ref.NULL, size,
+        PROT_READ | PROT_WRITE | PROT_EXEC,
+        MAP_PRIVATE | MAP_ANON, -1, 0);
+    var ret = p.reinterpret(size);
+    ret.free = function() {
+        libc.munmap(p, size);
+    };
+    return ret;
 }
-munmap = ffi.ForeignFunction(
-  ffi.DynamicLibrary("libc.dylib").get("munmap"),
-  "pointer", ["pointer", "size_t"]);
-memmove = ffi.ForeignFunction(
-  ffi.DynamicLibrary("libc.dylib").get("memmove"),
-  "int", ["int", "int"]);
-
-MEM_COMMIT  = 0x1000
-MEM_RELEASE = 0x8000
-PAGE_EXECUTE_READWRITE = 0x40
-
-buf = VirtualAlloc(ref.NULL, 16, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-codes = [
-    0x48, 0x89, 0xf8, // mov rax, rdi
-    0x48, 0x01, 0xf0, // add rax, rsi
-    0xc3             // ret
-];
-buflen = codes.length;
-mmap(65,65);
-
-console.log(mmap(0,0));
-console.log(munmap(0,65));
-console.log(munmap(0,65));
-// console.log(func2(9));
-// console.log("f(1, 2) = %d", func(1, 2));
+ 
+var buf = jitalloc(16);
+ 
+if (ref.sizeof.pointer == 4) {
+    // 32bit (i386)
+    buf.binaryWrite(
+        "\x8b\x44\x24\x04" +    // mov eax, [esp+4]
+        "\x03\x44\x24\x08" +    // add eax, [esp+8]
+        "\xc3", 0);             // ret
+} else {
+    // 64bit (x86-64)
+    buf.binaryWrite(
+        "\x89\xf8" +            // mov eax, edi
+        "\x01\xf0" +            // add eax, esi
+        "\xc3", 0);             // ret
+}
+ 
+var func = ffi.ForeignFunction(buf, "int", ["int", "int"]);
+console.log(func(1, 2));
+ 
+buf.free();
