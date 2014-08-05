@@ -15,4 +15,14 @@ i386アセンブリのJITコンパイラ
 $ npm install
 ```
 
+### PythonでJIT from https://gist.github.com/7shi/2533658#file-mac64-py
 
+```sh
+$ python mac64.py
+```
+
+### BF->Python アセンブリトランスレータ from https://github.com/mason-/cmpimpl/blob/master/python2/bf2asm.py
+
+```sh
+$ python bf2asm.py
+```
